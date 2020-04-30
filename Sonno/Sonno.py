@@ -1,12 +1,22 @@
 import csv
-#from decimal import Decimal, ROUND_DOWN, ROUND_UP
+import json
 
 #set parameters
-probability_parameter = 120
-credibility_parameter = 10
-wake_probability_load = 0.8
-inputFile = "31-01febbraio.csv"
-outputFile = "FilteredBedSensorData.csv"
+
+# probability_parameter = 120
+# credibility_parameter = 10
+# wake_probability_load = 0.8
+# inputFile = "31-01febbraio.csv"
+# outputFile = "FilteredBedSensorData.csv"
+
+with open("Parameters.json", "r") as read_file:
+    data = json.load(read_file)
+    probability_parameter = data["probability_parameter"]
+    credibility_parameter = data["credibility_parameter"]
+    wake_probability_load = data["wake_probability_load"]
+    inputFile = data["inputFile"]
+    outputFile = data["outputFile"]
+print(probability_parameter, credibility_parameter, wake_probability_load, inputFile, outputFile)
 
 #file settings
 inputFieldnames = ('id', 'id_node', 'time_packet', 'timestamp', 'HR', 'RR', 'SV', 'HRV', 'SS', 'status', 'b2b', 'b2b1', 'b2b2')
@@ -20,10 +30,10 @@ with open(inputFile, mode = 'r') as i_File:
         previous_stati = []
         previous_HRs = []
         for x in range(credibility_parameter):
-            previous_HRs.append(0)
+            previous_HRs.append(1)
         previous_RRs = []
         for x in range(credibility_parameter):
-            previous_RRs.append(0)
+            previous_RRs.append(1)
         data_counter = 0
         prev_HR = 0
         prev_RR = 0
@@ -35,7 +45,6 @@ with open(inputFile, mode = 'r') as i_File:
             data_counter += 1
 #first 120 inputs
             if data_counter <= probability_parameter:
-
                 o_id = row['id']
                 o_id_node = row['id_node']
                 o_time_packet = row['time_packet']
