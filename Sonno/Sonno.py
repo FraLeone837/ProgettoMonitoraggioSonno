@@ -1,49 +1,42 @@
 import csv
 import json
 
-#set parameters
-
-# probability_parameter = 120
-# credibility_parameter = 10
-# wake_probability_load = 0.8
-# inputFile = "31-01febbraio.csv"
-# outputFile = "FilteredBedSensorData.csv"
-
+#set parameters, taking them from the json configuration file:
 with open("Parameters.json", "r") as read_file:
     data = json.load(read_file)
-    probability_parameter = data["probability_parameter"]
-    credibility_parameter = data["credibility_parameter"]
-    wake_probability_load = data["wake_probability_load"]
+    probability_parameter = data["probability_parameter"]       #number of previous stati used to calculate the current status probabilities
+    credibility_parameter = data["credibility_parameter"]       #numer of values from previous acquisitions used to calculate the current credibility of HR/RR (1=taken from the sensor, 0=imputated)
+    wake_probability_load = data["wake_probability_load"]       #percentage load given to out-of-bed stati when calculate current status probabilities
     inputFile = data["inputFile"]
     outputFile = data["outputFile"]
 
-#file settings
+#set the csv files to be read/written, with their filednames:
 inputFieldnames = ('id', 'id_node', 'time_packet', 'timestamp', 'HR', 'RR', 'SV', 'HRV', 'SS', 'status', 'b2b', 'b2b1', 'b2b2')
-outputFieldname = ('id', 'id_node', 'time_packet', 'HR', 'HR_credibility', 'RR', 'RR_credibility', 'status', 'status_probability_out', 'status_probability_in', 'status_probability_mov')
+outputFieldnames = ('id', 'id_node', 'time_packet', 'HR', 'HR_credibility', 'RR', 'RR_credibility', 'status', 'status_probability_out', 'status_probability_in', 'status_probability_mov')
 with open(inputFile, mode = 'r') as i_File:
     with open(outputFile, mode = 'w', newline = '') as o_File:
         inputReader = csv.DictReader(i_File, fieldnames = inputFieldnames)
-        outputWriter = csv.DictWriter(o_File, fieldnames = outputFieldname, delimiter=',', quotechar='"', quoting = csv.QUOTE_ALL)
+        outputWriter = csv.DictWriter(o_File, fieldnames = outputFieldnames, delimiter=',', quotechar='"', quoting = csv.QUOTE_ALL)
 
-#global variables initialization
-        previous_stati = []
-        previous_HRs = []
+#global variables initialization:
+        previous_stati = []                         #contains the previous stati used to calculate current status probabilities
+        previous_HRs = []                           #contains the values from previous acquisitions used to calculate current credibility of HR
         for x in range(credibility_parameter):
             previous_HRs.append(1)
-        previous_RRs = []
+        previous_RRs = []                           #contains the values from previous acquisitions used to calculate current credibility of RR
         for x in range(credibility_parameter):
             previous_RRs.append(1)
-        data_counter = 0
-        prev_HR = 0
-        prev_RR = 0
-        HRcredibility_sum = 0
-        RRcredibility_sum = 0
+        line_counter = 0                            #counter for data acquisition
+        prev_HR = 0                                 #HR in the previous acquisition
+        prev_RR = 0                                 #RR in the previous acquisition
         #outputWriter.writeheader()
 
+#calculate output values for each line of input file:
         for row in inputReader:
-            data_counter += 1
-#first 120 inputs
-            if data_counter <= probability_parameter:
+            line_counter += 1
+
+#first n inputs, to be ignored (n=probability_parameter):
+            if line_counter <= probability_parameter:
                 o_id = row['id']
                 o_id_node = row['id_node']
                 o_time_packet = row['time_packet']
@@ -57,13 +50,15 @@ with open(inputFile, mode = 'r') as i_File:
                 o_RR = ''
                 o_RR_credibility = ''
 
-#other inputs
-            elif data_counter > probability_parameter:
-#costants
+#inputs starting from n+1:
+            elif line_counter > probability_parameter:
+
+#costant informations:
                 o_id = row['id']
                 o_id_node = row['id_node']
                 o_time_packet = row['time_packet']
-#status and probabilities
+
+#status and probabilities:
                 previous_stati.pop(0)
                 previous_stati.append(int(row['status']))
                 zero_sum = 0
@@ -85,7 +80,8 @@ with open(inputFile, mode = 'r') as i_File:
                     o_status = 1
                 else:
                     o_status = int(row['status'])
-#HR, RR and credibilities
+
+#HR, RR and credibilities:
                 previous_HRs.pop(0)
                 if o_status == 0:
                     o_HR = 0
@@ -122,7 +118,8 @@ with open(inputFile, mode = 'r') as i_File:
                     for x in previous_RRs:
                         RRcredibility_sum += x
                     o_RR_credibility = RRcredibility_sum / credibility_parameter
-#write results
+
+#write results:
             outputWriter.writerow({'id': o_id, 'id_node': o_id_node, 'time_packet' : o_time_packet, 'HR' : o_HR, 'HR_credibility' : o_HR_credibility, 'RR' : o_RR, 'RR_credibility' : o_RR_credibility, 'status' : o_status, 'status_probability_out' : o_status_probalility_out, 'status_probability_in' : o_status_probalility_in, 'status_probability_mov' : o_status_probalility_mov})
 
 
