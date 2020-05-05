@@ -13,7 +13,7 @@ def turnIntoHMS(decTime):
     return time
 
 #setting sleeping period
-tStart = "2020-2-1 0:30:0"
+tStart = "2020-2-1 0:30:00"
 tEnd = "2020-2-1 7:30:00"
 start = time.strptime(tStart, "%Y-%m-%d %H:%M:%S")
 end = time.strptime(tEnd, "%Y-%m-%d %H:%M:%S")
@@ -101,7 +101,7 @@ with open(inputFilteredFile, mode='r') as iFile:
     print('zero total percentage: ', zeroTotPercentage*100, ' (',turnIntoHMS(rowSumTot*zeroTotPercentage/3600),')', sep='')
     print('one total percentage: ', oneTotPercentage*100, ' (',turnIntoHMS(rowSumTot*oneTotPercentage/3600),')', sep='')
     print('two total percentage: ', twoTotPercentage*100, ' (',turnIntoHMS(rowSumTot*twoTotPercentage/3600),')\n', sep='')
-    print('Sleeping phase data): ', rowSum, ' (',turnIntoHMS(rowSum/3600),')', sep='')
+    print('Sleeping phase data: ', rowSum, ' (',turnIntoHMS(rowSum/3600),')', sep='')
     print('zero percentage: ', zeroPercentage*100, ' (',turnIntoHMS(rowSum*zeroPercentage/3600),')', sep='')
     print('one percentage: ', onePercentage*100, ' (',turnIntoHMS(rowSum*onePercentage/3600),')', sep='')
     print('two percentage: ', twoPercentage*100, ' (',turnIntoHMS(rowSum*twoPercentage/3600),')\n', sep='')
