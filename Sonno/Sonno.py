@@ -6,7 +6,7 @@ with open("Parameters.json", "r") as read_file:
     data = json.load(read_file)
     probability_parameter = data["probability_parameter"]       #number of previous stati used to calculate the current status probabilities
     credibility_parameter = data["credibility_parameter"]       #numer of values from previous acquisitions used to calculate the current credibility of HR/RR (1=taken from the sensor, 0=imputated)
-    wake_probability_load = data["wake_probability_load"]       #percentage load given to out-of-bed stati when calculate current status probabilities
+    wake_probability_load = data["wake_probability_load"]       #percentage load given to 'in bed' stati when calculate current status probabilities
     inputFile = data["inputFile"]
     outputFile = data["outputFile"]
 
@@ -35,7 +35,7 @@ with open(inputFile, mode = 'r') as i_File:
         for row in inputReader:
             line_counter += 1
 
-#first n inputs, to be ignored (n=probability_parameter):
+#first n inputs, to be ignored (n = probability_parameter):
             if line_counter <= probability_parameter:
                 o_id = row['id']
                 o_id_node = row['id_node']
@@ -59,8 +59,10 @@ with open(inputFile, mode = 'r') as i_File:
                 o_time_packet = row['time_packet']
 
 #status and probabilities:
+            #update the value of last n stati (n = probability_parameter)
                 previous_stati.pop(0)
                 previous_stati.append(int(row['status']))
+            #probalilities:
                 zero_sum = 0
                 one_sum = 0
                 two_sum = 0
@@ -74,6 +76,7 @@ with open(inputFile, mode = 'r') as i_File:
                 o_status_probalility_out = zero_sum / probability_parameter
                 o_status_probalility_in = one_sum / probability_parameter
                 o_status_probalility_mov = two_sum / probability_parameter
+            #status:
                 if o_status_probalility_out > (wake_probability_load * (o_status_probalility_in + o_status_probalility_mov)):
                     o_status = 0
                 elif int(row['status']) == 0:
@@ -82,17 +85,19 @@ with open(inputFile, mode = 'r') as i_File:
                     o_status = int(row['status'])
 
 #HR, RR and credibilities:
+            #HR:
                 previous_HRs.pop(0)
-                if o_status == 0:
+                if o_status == 0:                       #status = 0, HR = 0
                     o_HR = 0
                     previous_HRs.append(1)
-                elif int(row['HR']) == 0:
+                elif int(row['HR']) == 0:               #status != 0, HR imputated
                     o_HR = prev_HR
                     previous_HRs.append(0)
-                else:
+                else:                                   #status != 0, HR from the sensor
                     o_HR = int(row['HR'])
                     previous_HRs.append(1)
                 prev_HR = o_HR
+            #HR_credibility:
                 if o_status == 0:
                     o_HR_credibility = 1
                 else:
@@ -100,17 +105,19 @@ with open(inputFile, mode = 'r') as i_File:
                     for x in previous_HRs:
                         HRcredibility_sum += x
                     o_HR_credibility = HRcredibility_sum / credibility_parameter
+            #RR:
                 previous_RRs.pop(0)
-                if o_status == 0:
+                if o_status == 0:                       #status = 0, RR = 0
                     o_RR = 0
                     previous_RRs.append(1)
-                elif int(row['RR']) == 0:
+                elif int(row['RR']) == 0:               #status != 0, RR imputated
                     o_RR = prev_RR
                     previous_RRs.append(0)
-                else:
+                else:                                   #status != 0, RR from the sensor
                     o_RR = int(row['RR'])
                     previous_RRs.append(1)
                 prev_RR = o_RR
+            #RR_credibility
                 if o_status == 0:
                     o_RR_credibility = 1
                 else:

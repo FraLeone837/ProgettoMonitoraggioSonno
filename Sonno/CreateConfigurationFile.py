@@ -3,7 +3,7 @@ import json
 parameters = {
     "probability_parameter" : 120,
     "credibility_parameter" : 10,
-    "wake_probability_load": 0.8,
+    "wake_probability_load": 0.9,
     "inputFile" : "31-01febbraio.csv",
     "outputFile" : "FilteredBedSensorData.csv"
 }
